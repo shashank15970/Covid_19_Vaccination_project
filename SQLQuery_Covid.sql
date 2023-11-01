@@ -78,21 +78,22 @@ on D.date=V.date and D.location=V.location
 select * from percent_people_vaccinated
 
 
--- 1. 
+--Tableau Views 
+-- 1 Death Percentage 
 Select SUM(new_cases) as total_cases, SUM(cast(new_deaths as int)) as total_deaths, SUM(cast(new_deaths as int))/SUM(New_Cases)*100 as DeathPercentage
 From COVID.dbo.Covid_Deaths
 where continent is not null 
 order by 1,2
 
 
--- 2. 
+-- 2 Total Death Count
 Select continent, SUM(new_deaths) as TotalDeathCount
 From COVID.dbo.Covid_Deaths
 Group by continent
 order by TotalDeathCount desc
 
 
--- 3.
+-- 3 People Infected
 Select Location, Population, MAX(total_cases) as HighestInfectionCount,  Max((total_cases/population))*100 as PercentPopulationInfected
 From COVID.dbo.Covid_Deaths
 --Where location like '%states%'
@@ -100,7 +101,7 @@ Group by Location, Population
 order by PercentPopulationInfected desc
 
 
--- 4.
+-- 4 People Infected
 Select Location, Population,date, 
 max(new_cases), 
 Max((new_cases/population))*100 as currentPopulationInfected,
