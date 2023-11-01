@@ -76,3 +76,58 @@ on D.date=V.date and D.location=V.location
 
 --featching view
 select * from percent_people_vaccinated
+
+
+-- 1. 
+Select SUM(new_cases) as total_cases, SUM(cast(new_deaths as int)) as total_deaths, SUM(cast(new_deaths as int))/SUM(New_Cases)*100 as DeathPercentage
+From COVID.dbo.Covid_Deaths
+where continent is not null 
+order by 1,2
+
+
+-- 2. 
+Select continent, SUM(new_deaths) as TotalDeathCount
+From COVID.dbo.Covid_Deaths
+Group by continent
+order by TotalDeathCount desc
+
+
+-- 3.
+Select Location, Population, MAX(total_cases) as HighestInfectionCount,  Max((total_cases/population))*100 as PercentPopulationInfected
+From COVID.dbo.Covid_Deaths
+--Where location like '%states%'
+Group by Location, Population
+order by PercentPopulationInfected desc
+
+
+-- 4.
+Select Location, Population,date, 
+max(new_cases), 
+Max((new_cases/population))*100 as currentPopulationInfected,
+MAX(total_cases) as HighestInfectionCount,  
+Max((total_cases/population))*100 as PercentPopulationInfected
+From COVID.dbo.Covid_Deaths
+Group by Location, Population, date
+order by location,date
+
+
+
+--5 rate of vaccination vs rate of infection
+with t1(date,continent,location,infection_rate) as
+(select d1.date, d1.continent, d1.location, 
+coalesce(case when d1.new_cases!=0 then d2.new_cases/d1.new_cases else 0 end,0)
+from COVID.dbo.Covid_Deaths as d1
+join COVID.dbo.Covid_Deaths as d2
+on datediff(day,d1.date,d2.date)=1 and d1.location=d2.location),
+
+t2(date,continent,location,vaccination_rate) as
+(select d1.date, d1.continent, d1.location, 
+coalesce(case when d1.new_vaccinations!=0 then d2.new_vaccinations/d1.new_vaccinations else 0 end,0)
+from COVID.dbo.Covid_Vaccination as d1
+join COVID.dbo.Covid_Vaccination as d2
+on datediff(day,d1.date,d2.date)=1 and d1.location=d2.location)
+
+select t1.continent,t1.location, t1.date,t1.infection_rate,t2.vaccination_rate
+from t1
+join t2
+on t1.date=t2.date and t1.location=t2.location
